@@ -6,29 +6,63 @@ function OrderModal({ order, setOrderModal }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [addressError, setAddressError] = useState("");
 
   const navigate = useNavigate();
 
-  const placeOrder = async () => {
-    const response = await fetch("/api/orders", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        name,
-        phone,
-        address,
-        items: order
-      })
-    });
-    const data = await response.json();
-    console.log(data);
+  const formatPhoneNumber = (phoneNumber) => {
+    const cleanedNumber = phoneNumber.replace(/\D/g, "");
+    if (cleanedNumber.length === 10) {
+      return `(${cleanedNumber.slice(0, 3)}) ${cleanedNumber.slice(
+        3,
+        6
+      )}-${cleanedNumber.slice(6)}`;
+    }
+    return cleanedNumber;
+  };
 
-    if (response.status === 200) {
-      navigate(`/order-confirmation/${data.id}`);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setNameError("");
+    setPhoneError("");
+    setAddressError("");
+
+    if (!name) {
+      setNameError("*Name is required.");
+    }
+
+    if (!phone || phone.length < 10) {
+      setPhoneError("*Phone number (10 digits) is required. ");
+    }
+
+    if (!address) {
+      setAddressError("*Address is required.");
+    }
+
+    if (name && phone && phone.length >= 10 && address) {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name,
+          phone: formatPhoneNumber(phone),
+          address,
+          items: order
+        })
+      });
+      const data = await response.json();
+
+      if (response.status === 200) {
+        navigate(`/order-confirmation/${data.id}`);
+      }
     }
   };
+
   return (
     <>
       <div
@@ -45,7 +79,7 @@ function OrderModal({ order, setOrderModal }) {
       />
       <div className={styles.orderModalContent}>
         <h2>Place Order</h2>
-        <form className={styles.form}>
+        <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.formGroup}>
             <label htmlFor="name">
               Name
@@ -56,6 +90,7 @@ function OrderModal({ order, setOrderModal }) {
                 }}
                 type="text"
                 id="name"
+                value={name}
               />
             </label>
           </div>
@@ -67,8 +102,9 @@ function OrderModal({ order, setOrderModal }) {
                   e.preventDefault();
                   setPhone(e.target.value);
                 }}
-                type="phone"
+                type="text"
                 id="phone"
+                value={phone}
               />
             </label>
           </div>
@@ -80,29 +116,28 @@ function OrderModal({ order, setOrderModal }) {
                   e.preventDefault();
                   setAddress(e.target.value);
                 }}
-                type="phone"
+                type="text"
                 id="address"
+                value={address}
               />
             </label>
           </div>
+          {nameError && <p>{nameError}</p>}
+          {phoneError && <p>{phoneError}</p>}
+          {addressError && <p>{addressError}</p>}
+          <br />
+          <div className={styles.orderModalButtons}>
+            <button
+              className={styles.orderModalClose}
+              onClick={() => setOrderModal(false)}
+            >
+              Close
+            </button>
+            <button type="submit" className={styles.orderModalPlaceOrder}>
+              Place Order
+            </button>
+          </div>
         </form>
-
-        <div className={styles.orderModalButtons}>
-          <button
-            className={styles.orderModalClose}
-            onClick={() => setOrderModal(false)}
-          >
-            Close
-          </button>
-          <button
-            onClick={() => {
-              placeOrder();
-            }}
-            className={styles.orderModalPlaceOrder}
-          >
-            Place Order
-          </button>
-        </div>
       </div>
     </>
   );
