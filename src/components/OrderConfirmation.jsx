@@ -20,14 +20,12 @@ function OrderConfirmation({ order }) {
         </div>
       </div>
 
-      <div className={styles.itemsContainer}>
-        {order.items.map((item) => (
-          <p key={item.id}>
-            x{item.quantity}&nbsp;&nbsp;&nbsp;{item.item.name}
-            &nbsp;&nbsp;&nbsp;${item.item.price}
-          </p>
-        ))}
-      </div>
+      {order.items.map((item) => (
+        <p className={styles.orderItems} key={item.item.id}>
+          x{item.quantity}&nbsp;&nbsp;&nbsp;{item.item.name}
+          &nbsp;&nbsp;&nbsp;${item.item.price}
+        </p>
+      ))}
     </>
   );
 }
